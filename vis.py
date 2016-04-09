@@ -1,9 +1,11 @@
+#!python3
 from tkinter import Tk, Canvas, PhotoImage, mainloop
 from math import sin
 import queue
 import threading
+import time
 
-WIDTH, HEIGHT = 720, 720
+WIDTH, HEIGHT = 100, 100
 
 f = open('bands.txt', 'r')
 bands_raw =  f.read()
@@ -14,7 +16,6 @@ for frame_raw in frames_raw:
 	frames.append(bands)
 
 print(len(frames))
-print(frames[100])
 
 window = Tk()
 canvas = Canvas(window, width=WIDTH, height=HEIGHT, bg="#000000")
@@ -22,46 +23,34 @@ canvas.pack()
 img = PhotoImage(width=WIDTH, height=HEIGHT)
 canvas.create_image((WIDTH/2, HEIGHT/2), image=img, state="normal")
 
-frame = frames[0]
+def plot_frame(frame):
+	global HEIGHT, frame_index
 
-print(len(frame))
+	bar_width = int(float(HEIGHT) / len(frame))
 
-bar_width = int(float(HEIGHT) / len(frame))
+	def plot(x, y, color):
+		global img
+		img.put(color, (x, HEIGHT-y))
 
-def plot(x, y, color):
-	global img
-	img.put(color, (x, HEIGHT-y))
+	print("new phone who dis " + str(frame_index))
+	for i in range(len(frame)):
+		for x in range(i * bar_width, i * bar_width + bar_width):
+			for y in range(0, int(float(frame[i]) * HEIGHT)):
+				plot(x, y, '#ffffff')
 
-# write code here
+frame_index = 0
+def load_next_frame():
+	global frames, frame_index
+	print("loading next frame??")
+	frame = frames[frame_index]
+	plot_frame(frame)
+	frame_index += 1
 
-print(bar_width)
-for i in range(len(frame)):
-	for x in range(i * bar_width, i * bar_width + bar_width):
-		for y in range(0, int(float(frame[i]) * HEIGHT)):
-			plot(x, y, '#ffffff')
-
-# ok now stop
-
-mainloop()
-
-class GUI:
-	def __init__(self, master):
-		self.master = master
-		self.queue = queue.Queue()
-		ThreadedTask(self.queue).start()
-		self.master.after(100, self.process_queue)
-	def process_queue(self):
-		try:
-			msg = self.queue.get(0)
-			print(msg)
-		except Queue.Empty:
-			self.master.after(100, self.process_queue)
-
-class ThreadedTask(threading.Thread):
-	def __init__(self, queue):
-		threading.Thread.__init__(self)
-		self.queue = queue
-
-	def run(self):
-		time.sleep(5)
-		self.queue.put('Task finished')
+load_next_frame()
+window.update_idletasks()
+window.update()
+while frame_index < len(frames):
+	time.sleep(1 / 42.0)
+	load_next_frame()
+	window.update_idletasks()
+	window.update()
