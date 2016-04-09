@@ -1,0 +1,43 @@
+from Tkinter import Tk, Canvas, PhotoImage, mainloop
+from math import sin
+
+WIDTH, HEIGHT = 720, 720
+
+f = open('bands.txt', 'r')
+bands_raw =  f.read()
+frames_raw = bands_raw.split("\n")
+frames = []
+for frame_raw in frames_raw:
+	bands = frame_raw.split(" ")[:-2]
+	frames.append(bands)
+
+print len(frames)
+print frames[100]
+
+window = Tk()
+canvas = Canvas(window, width=WIDTH, height=HEIGHT, bg="#000000")
+canvas.pack()
+img = PhotoImage(width=WIDTH, height=HEIGHT)
+canvas.create_image((WIDTH/2, HEIGHT/2), image=img, state="normal")
+
+frame = frames[0]
+
+print len(frame)
+
+bar_width = int(float(HEIGHT) / len(frame))
+
+def plot(x, y, color):
+	global img
+	img.put(color, (x, HEIGHT-y))
+
+# write code here
+
+print bar_width
+for i in range(len(frame)):
+	for x in range(i * bar_width, i * bar_width + bar_width):
+		for y in range(0, int(float(frame[i]) * HEIGHT)):
+			plot(x, y, '#ffffff')
+
+# ok now stop
+
+mainloop()
