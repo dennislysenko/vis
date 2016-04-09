@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Vis</title>
+<script type="text/javascript" src="bands.js"></script>
+<script type="text/javascript" src="visualizers.js"></script>
+</head>
+<body>
+<canvas id="vis-canvas" width="360" height="360"></canvas>
+<audio src="waves.mp3"></audio>
+<script>
+var audio = document.getElementsByTagName('audio')[0];
+
+audio.addEventListener('canplaythrough', function(e) {
+	audio.play();
+
+	var canvas = document.getElementById('vis-canvas');
+
+	var allFrames = window.allFrames;
+	var frameIndex = 1;
+	var lastFrame = allFrames[0];
+
+	function nextFrame() {
+		var frame = allFrames[frameIndex];
+		lastFrame = frame;
+
+		if (frame == undefined) {
+			frameIndex = 0;
+			audio.currentTime = 0;
+			return;
+		}
+
+		var width = canvas.width;
+		var height = canvas.height;
+
+		// display frame on canvas
+		var ctx = canvas.getContext('2d');
+
+		ctx.clearRect(0, 0, width, height);
+
+		function plot(x, y, color) {
+			ctx.fillStyle = color;
+			ctx.fillRect(x, height - y, 1, 1);
+		}
+
+		window.visualizer(plot, frame, width, height, function(r, g, b, a) {
+			return "rgba(" + parseInt(r * 255) + "," + parseInt(g * 255) + "," + parseInt(b * 255) + "," + parseInt(a * 255) + ")";
+		});
+
+		frameIndex += 1;	
+	}
+
+	if (window.nextFrameInterval) {
+		clearInterval(window.nextFrameInterval);
+	}
+	window.nextFrameInterval = setInterval(nextFrame, 1000 / 42.0);
+});
+
+document.addEventListener("visibilitychange", function() {
+	if (document.hidden) {
+		audio.volume = 0;
+	} else {
+		audio.volume = 1;
+	}
+	console.log('wow', document.hidden);
+}, false);
+
+</script>
+</body>
+</html>
