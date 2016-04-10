@@ -1,5 +1,9 @@
-// Simplest visualizer: just draws bars representing the exact frequency values.
-function simpleBars(plot, frequencies, width, height) {
+var visualizers = [];
+function defineVisualizer(name, description, visualizerFunction) {
+	visualizers.push({ name: name, description: description, visualizerFunction: visualizerFunction }); // wish i had ES6 :/
+}
+
+defineVisualizer('simpleBars', 'Simplest visualizer: just draws bars representing the exact frequency values.', function (plot, frequencies, width, height) {
 	var barWidth = width / frequencies.length;
 	for (var b = 0; b < frequencies.length; b++) {
 		for (var x = b * barWidth; x < (b + 1) * barWidth - 1; x++) {
@@ -8,10 +12,9 @@ function simpleBars(plot, frequencies, width, height) {
 			}
 		}
 	}
-}
+});
 
-// Draws bars split up into pixel squares, making it a more discrete spectrum rather than continuous.
-function pixelBars(plot, frequencies, width, height) {
+defineVisualizer('pixelBars', 'Draws bars split up into pixel squares, making it a more discrete spectrum rather than continuous.', function (plot, frequencies, width, height) {
 	var barWidth = width / frequencies.length;
 	for (var barIndex = 0; barIndex < frequencies.length; barIndex++) {
 		for (var x = barIndex * barWidth; x < (barIndex + 1) * barWidth - 1; x++) {
@@ -25,10 +28,9 @@ function pixelBars(plot, frequencies, width, height) {
 			}
 		}
 	}
-}
+});
 
-// Draws bars with little caps on the top to add some differentiation.
-function barsWithCaps(plot, frequencies, width, height) {
+defineVisualizer('barsWithCaps', 'Draws bars with little caps on the top to add some differentiation.', function (plot, frequencies, width, height) {
 	var barWidth = width / frequencies.length;
 	for (var barIndex = 0; barIndex < frequencies.length; barIndex++) {
 		for (var x = barIndex * barWidth; x < (barIndex + 1) * barWidth - 1; x++) {
@@ -50,10 +52,9 @@ function barsWithCaps(plot, frequencies, width, height) {
 			}
 		}
 	}
-}
+});
 
-// Attempts to show velocity by splitting each pixel bar into two columns and having the rightmost column lead in the direction of the velocity (up when rising, down when falling).
-function pixelBarsQuadWithLeading(plot, frequencies, width, height, velocity) {
+defineVisualizer('pixelBarsQuadWithLeading', 'Attempts to show velocity by splitting each pixel bar into two columns and having the rightmost column lead in the direction of the velocity (up when rising, down when falling).', function (plot, frequencies, width, height, velocity) {
 	var barWidth = width / frequencies.length;
 	for (var barIndex = 0; barIndex < frequencies.length; barIndex++) {
 		for (var x = barIndex * barWidth; x < (barIndex + 0.5) * barWidth - 1; x++) {
@@ -88,14 +89,13 @@ function pixelBarsQuadWithLeading(plot, frequencies, width, height, velocity) {
 			}
 		}
 	}
-}
+});
 
 Array.prototype.flatMap = function(transform) {
 	return this.map(transform).reduce(function(a, b) { return a.concat(b) }, []);
 };
 
-// Centered bars sliding in and out.
-function slidingBars(plot, frequencies, width, height) {
+defineVisualizer('slidingBars', 'Centered bars sliding in and out.', function(plot, frequencies, width, height) {
 	function rand(seed) {
 		return parseFloat('0.' + Math.sin(seed).toString().substr(6), 10);
 	}
@@ -129,7 +129,7 @@ function slidingBars(plot, frequencies, width, height) {
 			}
 		}
 	}
-}
+});
 
 // Draws concentric circles representing approximate bass, mid and treble frequency ranges.
 function rangeCircles(plot, frequencies, width, height, rgbaNorm) {
@@ -163,8 +163,7 @@ function rangeCircles(plot, frequencies, width, height, rgbaNorm) {
 	// }
 }
 
-// Shows pixel bars but shakes them.
-function shakingPixelBars(plot, frequencies, width, height, velocity, frameIndex) {
+defineVisualizer('shakingPixelBars', 'Shows pixel bars but shakes them.', function(plot, frequencies, width, height, velocity, frameIndex) {
 	var bassAverage = frequencies.slice(0, 5).reduce(function(a, b) { return a + b }, 0) / 5;
 	var maxVariationX = 0.15 * width;
 	var maxVariationY = 0.08 * height;
@@ -184,9 +183,9 @@ function shakingPixelBars(plot, frequencies, width, height, velocity, frameIndex
 			}
 		}
 	}
-}
+});
 
-function shakingBars(plot, frequencies, width, height, velocity, frameIndex) {	
+defineVisualizer('shakingBars', 'Shows regular bars but shakes them in time with bass.', function (plot, frequencies, width, height, velocity, frameIndex) {	
 	var bassAverage = frequencies.slice(0, 5).reduce(function(a, b) { return a + b }, 0) / 5;
 	var maxVariationX = 0.15 * width;
 	var maxVariationY = 0.08 * height;
@@ -201,6 +200,6 @@ function shakingBars(plot, frequencies, width, height, velocity, frameIndex) {
 			}
 		}
 	}
-}
+});
 
-var visualizer = shakingPixelBars;
+var visualizer = visualizers[0].visualizerFunction;
