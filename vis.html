@@ -17,18 +17,28 @@ audio.addEventListener('canplaythrough', function(e) {
 	var canvas = document.getElementById('vis-canvas');
 
 	var allFrames = window.allFrames;
-	var frameIndex = 1;
-	var lastFrame = allFrames[0];
+	var frameIndex = 0;
+	var lastFrame = undefined;
 
 	function nextFrame() {
 		var frame = allFrames[frameIndex];
-		lastFrame = frame;
 
 		if (frame == undefined) {
+			// wrap around tbh
 			frameIndex = 0;
 			audio.currentTime = 0;
 			return;
 		}
+
+		var velocity = frame.map(function(value, index) {
+			if (lastFrame == undefined || lastFrame[index] == undefined) {
+				return value;
+			} else {
+				return value - lastFrame[index];
+			}
+		});
+
+		lastFrame = frame;
 
 		var width = canvas.width;
 		var height = canvas.height;
@@ -41,11 +51,13 @@ audio.addEventListener('canplaythrough', function(e) {
 		function plot(x, y, color) {
 			ctx.fillStyle = color;
 			ctx.fillRect(x, height - y, 1, 1);
-		}
+		};
 
-		window.visualizer(plot, frame, width, height, function(r, g, b, a) {
+		function rgbaNorm(r, g, b, a) {
 			return "rgba(" + parseInt(r * 255) + "," + parseInt(g * 255) + "," + parseInt(b * 255) + "," + parseInt(a * 255) + ")";
-		});
+		};
+
+		window.visualizer(plot, frame, width, height, velocity, frameIndex);
 
 		frameIndex += 1;	
 	}

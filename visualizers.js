@@ -1,7 +1,8 @@
+// Simplest visualizer: just draws bars representing the exact frequency values.
 function simpleBars(plot, frequencies, width, height) {
 	var barWidth = width / frequencies.length;
 	for (var b = 0; b < frequencies.length; b++) {
-		for (var x = b * barWidth; x < (b + 1) * barWidth; x++) {
+		for (var x = b * barWidth; x < (b + 1) * barWidth - 1; x++) {
 			for (var y = 0; y < frequencies[b] * height; y++) {
 				plot(x, y, '#25aae1');
 			}
@@ -9,6 +10,7 @@ function simpleBars(plot, frequencies, width, height) {
 	}
 }
 
+// Draws bars split up into pixel squares, making it a more discrete spectrum rather than continuous.
 function pixelBars(plot, frequencies, width, height) {
 	var barWidth = width / frequencies.length;
 	for (var barIndex = 0; barIndex < frequencies.length; barIndex++) {
@@ -25,12 +27,75 @@ function pixelBars(plot, frequencies, width, height) {
 	}
 }
 
+// Draws bars with little caps on the top to add some differentiation.
+function barsWithCaps(plot, frequencies, width, height) {
+	var barWidth = width / frequencies.length;
+	for (var barIndex = 0; barIndex < frequencies.length; barIndex++) {
+		for (var x = barIndex * barWidth; x < (barIndex + 1) * barWidth - 1; x++) {
+			var blockHeight = barWidth;
+			var barHeight = frequencies[barIndex] * height;
+			var verticalBuckets = barHeight / blockHeight;
+
+			for (var y = 0; y < barHeight; y++) {
+				// If we are at the 
+				var beforeLastBlock = barHeight - 4;
+
+				if (y > beforeLastBlock) {
+					plot(x, y, '#25aae1');
+				}
+				else if (/*(y % blockHeight == 0 && y < barHeight - blockHeight) || */(Math.abs(y - beforeLastBlock) < 1)) {
+				} else {
+					plot(x, y, '#25aae1');
+				}
+			}
+		}
+	}
+}
+
+// Attempts to show velocity by splitting each pixel bar into two columns and having the rightmost column lead in the direction of the velocity (up when rising, down when falling).
+function pixelBarsQuadWithLeading(plot, frequencies, width, height, velocity) {
+	var barWidth = width / frequencies.length;
+	for (var barIndex = 0; barIndex < frequencies.length; barIndex++) {
+		for (var x = barIndex * barWidth; x < (barIndex + 0.5) * barWidth - 1; x++) {
+			var blockHeight = barWidth / 2;
+			var barHeight = frequencies[barIndex] * height;
+			var verticalBuckets = barHeight / blockHeight;
+
+			if (velocity[barIndex] > 0) {
+				verticalBuckets -= 1;
+			}
+
+			for (var blockIndex = 0; blockIndex < verticalBuckets; blockIndex++) {
+				for (var y = blockIndex * blockHeight; y < (blockIndex + 1) * blockHeight - 1; y++) {
+					plot(x, y, '#25aae1');
+				}
+			}
+		}
+
+		for (var x = (barIndex + 0.5) * barWidth; x < (barIndex + 1) * barWidth - 1; x++) {
+			var blockHeight = barWidth / 2;
+			var barHeight = frequencies[barIndex] * height;
+			var verticalBuckets = barHeight / blockHeight;
+
+			if (velocity[barIndex] < 0) {
+				verticalBuckets -= 1;
+			}
+
+			for (var blockIndex = 0; blockIndex < verticalBuckets; blockIndex++) {
+				for (var y = blockIndex * blockHeight; y < (blockIndex + 1) * blockHeight - 1; y++) {
+					plot(x, y, '#25aae1');
+				}
+			}
+		}
+	}
+}
+
 Array.prototype.flatMap = function(transform) {
 	return this.map(transform).reduce(function(a, b) { return a.concat(b) }, []);
 };
 
+// Centered bars sliding in and out.
 function slidingBars(plot, frequencies, width, height) {
-
 	function rand(seed) {
 		return parseFloat('0.' + Math.sin(seed).toString().substr(6), 10);
 	}
@@ -49,7 +114,7 @@ function slidingBars(plot, frequencies, width, height) {
 		});
 	}
 
-	var rescaledFrequencies = rescaleFrequencies(frequencies, 200);
+	var rescaledFrequencies = frequencies;//rescaleFrequencies(frequencies, 200);
 
 	var barWidth = width / rescaledFrequencies.length;
 	for (var b = 0; b < rescaledFrequencies.length; b++) {
@@ -66,37 +131,76 @@ function slidingBars(plot, frequencies, width, height) {
 	}
 }
 
-// function dopeShit(plot, frequencies, width, height, rgbaNorm) {
-// 	var bassAverage = frequencies.slice(0, 5).reduce(function(a, b) { return a + b }, 0) / 5;
-// 	var midAverage = frequencies.slice(5, 15).reduce(function(a, b) { return a + b }, 0) / 10;
-// 	var trebleAverage = frequencies.slice(15, 20).reduce(function(a, b) { return a + b }, 0) / 5;
-// 	// console.log(trebleAverage);
+// Draws concentric circles representing approximate bass, mid and treble frequency ranges.
+function rangeCircles(plot, frequencies, width, height, rgbaNorm) {
+	var bassAverage = frequencies.slice(0, 5).reduce(function(a, b) { return a + b }, 0) / 5;
+	var midAverage = frequencies.slice(5, 15).reduce(function(a, b) { return a + b }, 0) / 10;
+	var trebleAverage = frequencies.slice(15, 20).reduce(function(a, b) { return a + b }, 0) / 5;
+	// console.log(trebleAverage);
 
-// 	function drawCircle(value, color, cx, cy) {
-// 		var rx = value / 2 * width;
-// 		var ry = value / 2 * height;
+	function drawCircle(value, color, cx, cy) {
+		var rx = value / 2 * width;
+		var ry = value / 2 * height;
 
-// 		// var cx = width / 2;
-// 		// var cy = height / 2;
+		// var cx = width / 2;
+		// var cy = height / 2;
 
-// 		for (var r = 0; r < rx; r += 1) {
-// 			for (var theta = 0; theta < 2 * Math.PI; theta += 0.01) {
-// 				plot(cx + r * Math.cos(theta), cy + (ry / rx) * r * Math.sin(theta), color);
-// 			}
-// 		}
-// 	}
+		for (var r = 0; r < rx; r += 1) {
+			for (var theta = 0; theta < 2 * Math.PI; theta += 0.01) {
+				plot(cx + r * Math.cos(theta), cy + (ry / rx) * r * Math.sin(theta), color);
+			}
+		}
+	}
 
-// 	drawCircle(bassAverage, '#25aae1', width / 2, height / 2);
-// 	drawCircle(midAverage, '#678374', width / 2, height / 2);
-// 	drawCircle(trebleAverage, '#484303', width / 2, height / 2);
+	drawCircle(bassAverage, '#25aae1', width / 2, height / 2);
+	drawCircle(midAverage, '#678374', width / 2, height / 2);
+	drawCircle(trebleAverage, '#484303', width / 2, height / 2);
 
-// 	// for (var x = width / 2 - wvariation; x < width / 2 + wvariation; x++) {
-// 	// 	for (var y = height / 2 - hvariation; y < height / 2 + hvariation; y++) {
-// 	// 		plot(x, y, rgbaNorm(1 - bassAverage, midAverage, 1 - trebleAverage, 1));
-// 	// 	}
-// 	// }
-// }
+	// for (var x = width / 2 - wvariation; x < width / 2 + wvariation; x++) {
+	// 	for (var y = height / 2 - hvariation; y < height / 2 + hvariation; y++) {
+	// 		plot(x, y, rgbaNorm(1 - bassAverage, midAverage, 1 - trebleAverage, 1));
+	// 	}
+	// }
+}
 
+// Shows pixel bars but shakes them.
+function shakingPixelBars(plot, frequencies, width, height, velocity, frameIndex) {
+	var bassAverage = frequencies.slice(0, 5).reduce(function(a, b) { return a + b }, 0) / 5;
+	var maxVariationX = 0.15 * width;
+	var maxVariationY = 0.08 * height;
+	var barWidth = width / frequencies.length;
 
+	for (var barIndex = 0; barIndex < frequencies.length; barIndex++) {
+		for (var x = barIndex * barWidth; x < (barIndex + 1) * barWidth - 1; x++) {
+			var blockHeight = barWidth;
+			var barHeight = frequencies[barIndex] * height;
+			var verticalBuckets = barHeight / blockHeight;
+			for (var blockIndex = 0; blockIndex < verticalBuckets; blockIndex++) {
+				for (var y = blockIndex * blockHeight; y < (blockIndex + 1) * blockHeight - 1; y++) {
+					var variationX = Math.pow(bassAverage, 2) * maxVariationX * Math.sin(frameIndex);
+					var variationY = Math.pow(bassAverage, 2) * maxVariationY * Math.sin(frameIndex);
+					plot(x + variationX, y + variationY, '#25aae1');
+				}
+			}
+		}
+	}
+}
 
-var visualizer = pixelBars;
+function shakingBars(plot, frequencies, width, height, velocity, frameIndex) {	
+	var bassAverage = frequencies.slice(0, 5).reduce(function(a, b) { return a + b }, 0) / 5;
+	var maxVariationX = 0.15 * width;
+	var maxVariationY = 0.08 * height;
+	var barWidth = width / frequencies.length;
+
+	for (var b = 0; b < frequencies.length; b++) {
+		for (var x = b * barWidth; x < (b + 1) * barWidth - 1; x++) {
+			for (var y = 0; y < frequencies[b] * height; y++) {
+				var variationX = Math.pow(bassAverage, 2) * maxVariationX * Math.sin(frameIndex);
+				var variationY = Math.pow(bassAverage, 2) * maxVariationY * Math.sin(frameIndex);
+				plot(x + variationX, y + variationY, '#25aae1');
+			}
+		}
+	}
+}
+
+var visualizer = shakingPixelBars;
