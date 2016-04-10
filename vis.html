@@ -7,7 +7,7 @@
 </head>
 <body>
 <canvas id="vis-canvas" width="360" height="360"></canvas><br />
-<audio src="waves.mp3"></audio>
+<audio src="test.mp3"></audio>
 <button id="previous-button">&lt;</button>
 <button id="next-button">&gt;</button>
 <span id="visualizer-name">&nbsp;</span>
@@ -38,7 +38,7 @@ document.getElementById('next-button').addEventListener('click', function(e) {
 	updateVisualizerLabel();
 });
 
-audio.addEventListener('canplaythrough', function(e) {
+var startVisualizer = function(e) {
 	audio.play();
 
 	var canvas = document.getElementById('vis-canvas');
@@ -93,7 +93,10 @@ audio.addEventListener('canplaythrough', function(e) {
 		clearInterval(window.nextFrameInterval);
 	}
 	window.nextFrameInterval = setInterval(nextFrame, 1000 / 42.0);
-});
+};
+
+audio.addEventListener('error', startVisualizer);
+audio.addEventListener('canplaythrough', startVisualizer);
 
 document.addEventListener("visibilitychange", function() {
 	if (document.hidden) {
