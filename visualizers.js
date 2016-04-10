@@ -114,11 +114,13 @@ defineVisualizer('slidingBars', 'Centered bars sliding in and out.', function(pl
 		});
 	}
 
-	var rescaledFrequencies = frequencies;//rescaleFrequencies(frequencies, 200);
+	var rescaledFrequencies = rescaleFrequencies(frequencies, 60);
 
 	var barWidth = width / rescaledFrequencies.length;
+	var actualBarWidth = barWidth / 4;
 	for (var b = 0; b < rescaledFrequencies.length; b++) {
-		for (var x = b * barWidth; x < (b + 1) * barWidth; x++) {
+		var barMid = (b + 0.5) * barWidth;
+		for (var x = barMid - actualBarWidth / 2; x < barMid + actualBarWidth / 2; x++) {
 			var midY = height / 2;
 			var otherHeight = rescaledFrequencies[b] * height / 2;
 			var startY = midY - otherHeight / 2;
