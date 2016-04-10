@@ -1,3 +1,3 @@
 <?php
-require('index.html');
+require('vis.html');
 ?>
