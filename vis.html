@@ -6,10 +6,37 @@
 <script type="text/javascript" src="visualizers.js"></script>
 </head>
 <body>
-<canvas id="vis-canvas" width="360" height="360"></canvas>
+<canvas id="vis-canvas" width="360" height="360"></canvas><br />
 <audio src="waves.mp3"></audio>
+<button id="previous-button">&lt;</button>
+<button id="next-button">&gt;</button>
+<span id="visualizer-name">&nbsp;</span>
+<br />
+<div id="visualizer-description">&nbsp;</div>
 <script>
 var audio = document.getElementsByTagName('audio')[0];
+var visualizers = window.visualizers;
+var visualizerIndex = 0;
+
+function updateVisualizerLabel() {
+	document.getElementById('visualizer-name').innerHTML = visualizers[visualizerIndex].name;
+	document.getElementById('visualizer-description').innerHTML = visualizers[visualizerIndex].description;
+}
+updateVisualizerLabel();
+
+document.getElementById('previous-button').addEventListener('click', function(e) {
+	visualizerIndex--;
+	if (visualizerIndex < 0) {
+		visualizerIndex += visualizers.length;
+	}
+	updateVisualizerLabel();
+});
+
+document.getElementById('next-button').addEventListener('click', function(e) {
+	visualizerIndex++;
+	visualizerIndex %= visualizers.length;
+	updateVisualizerLabel();
+});
 
 audio.addEventListener('canplaythrough', function(e) {
 	audio.play();
@@ -57,7 +84,7 @@ audio.addEventListener('canplaythrough', function(e) {
 			return "rgba(" + parseInt(r * 255) + "," + parseInt(g * 255) + "," + parseInt(b * 255) + "," + parseInt(a * 255) + ")";
 		};
 
-		window.visualizer(plot, frame, width, height, velocity, frameIndex);
+		visualizers[visualizerIndex].visualizerFunction(plot, frame, width, height, velocity, frameIndex);
 
 		frameIndex += 1;	
 	}

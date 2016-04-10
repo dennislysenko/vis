@@ -1,4 +1,4 @@
-var visualizers = [];
+window.visualizers = [];
 function defineVisualizer(name, description, visualizerFunction) {
 	visualizers.push({ name: name, description: description, visualizerFunction: visualizerFunction }); // wish i had ES6 :/
 }
@@ -201,5 +201,3 @@ defineVisualizer('shakingBars', 'Shows regular bars but shakes them in time with
 		}
 	}
 });
-
-var visualizer = visualizers[0].visualizerFunction;
