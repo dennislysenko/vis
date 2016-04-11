@@ -95,34 +95,29 @@ Array.prototype.flatMap = function(transform) {
 	return this.map(transform).reduce(function(a, b) { return a.concat(b) }, []);
 };
 
-defineVisualizer('slidingBars', 'Centered bars sliding in and out.', function(plot, frequencies, width, height) {
-	function rand(seed) {
-		return parseFloat('0.' + Math.sin(seed).toString().substr(6), 10);
-	}
+function rescaleFrequencies(frequencies, length) {
+	var seed = 0;
+	var resampleFactor = Math.floor(length / frequencies.length) - 1;
+	return frequencies.flatMap(function(x) {
+		var fudgedSamples = [x];
+		for (var i = 0; i < resampleFactor; i++) {
+			fudgedSamples.push(x + Math.abs(Math.sin(seed * Math.PI / resampleFactor)) * 0.1);
+			seed += 1;
+		}
+		return fudgedSamples;
+	});
+}
 
-	function rescaleFrequencies(frequencies, length) {
-		var seed = 0;
-		var resampleFactor = Math.floor(length / frequencies.length) - 1;
-		return frequencies.flatMap(function(x) {
-			var fudgedSamples = [x];
-			for (var i = 0; i < resampleFactor; i++) {
-				// fudgedSamples.push(x + Math.random() * 0.1);
-				fudgedSamples.push(x + Math.abs(Math.sin(seed * Math.PI / resampleFactor)) * 0.1);
-				seed += 1;
-			}
-			return fudgedSamples;
-		});
-	}
-
+defineVisualizer('centerBars', 'Centered bars.', function(plot, frequencies, width, height) {
 	var rescaledFrequencies = rescaleFrequencies(frequencies, 60);
 
 	var barWidth = width / rescaledFrequencies.length;
 	var actualBarWidth = barWidth / 4;
-	for (var b = 0; b < rescaledFrequencies.length; b++) {
-		var barMid = (b + 0.5) * barWidth;
-		for (var x = barMid - actualBarWidth / 2; x < barMid + actualBarWidth / 2; x++) {
+	for (var barIndex = 0; barIndex < rescaledFrequencies.length; barIndex++) {
+		var barMidX = (barIndex + 0.5) * barWidth;
+		for (var x = barMidX - actualBarWidth / 2; x < barMidX + actualBarWidth / 2; x++) {
 			var midY = height / 2;
-			var otherHeight = rescaledFrequencies[b] * height / 2;
+			var otherHeight = rescaledFrequencies[barIndex] * height / 2;
 			var startY = midY - otherHeight / 2;
 			var endY = midY + otherHeight / 2;
 
@@ -133,37 +128,71 @@ defineVisualizer('slidingBars', 'Centered bars sliding in and out.', function(pl
 	}
 });
 
-// Draws concentric circles representing approximate bass, mid and treble frequency ranges.
-function rangeCircles(plot, frequencies, width, height, rgbaNorm) {
+defineVisualizer('shakingCenterBars', 'Centered bars shaking to the beat.', function(plot, frequencies, width, height, velocity, frameIndex) {
+	var bassAverage = frequencies.slice(0, 5).reduce(function(a, b) { return a + b }, 0) / 5;
+	var maxVariationX = 0.08 * width;
+	var maxVariationY = 0.00 * height;
+	var rescaledFrequencies = rescaleFrequencies(frequencies, 60);
+	console.log(bassAverage);
+
+	var barWidth = width / rescaledFrequencies.length;
+	var actualBarWidth = barWidth / 4;
+	for (var barIndex = 0; barIndex < rescaledFrequencies.length; barIndex++) {
+		var barMidX = (barIndex + 0.5) * barWidth;
+		for (var x = barMidX - actualBarWidth / 2; x < barMidX + actualBarWidth / 2; x++) {
+			var midY = height / 2;
+			var otherHeight = rescaledFrequencies[barIndex] * height / 2;
+			var startY = midY - otherHeight / 2;
+			var endY = midY + otherHeight / 2;
+
+			for (var y = startY; y < endY; y++) {
+				var variationX = Math.pow(bassAverage, 2) * maxVariationX * Math.sin(frameIndex);
+				var variationY = Math.pow(bassAverage, 2) * maxVariationY * Math.sin(frameIndex);
+				plot(x + variationX, y + variationY, '#25aae1');
+			}
+		}
+	}
+});
+
+defineVisualizer('sun', 'Draws concentric circles representing approximate bass, mid and treble frequency ranges.', function (plot, frequencies, width, height, rgbaNorm) {
 	var bassAverage = frequencies.slice(0, 5).reduce(function(a, b) { return a + b }, 0) / 5;
 	var midAverage = frequencies.slice(5, 15).reduce(function(a, b) { return a + b }, 0) / 10;
 	var trebleAverage = frequencies.slice(15, 20).reduce(function(a, b) { return a + b }, 0) / 5;
-	// console.log(trebleAverage);
 
-	function drawCircle(value, color, cx, cy) {
-		var rx = value / 2 * width;
-		var ry = value / 2 * height;
+	var bassCumulative = bassAverage;
+	var midCumulative = midAverage + bassAverage;
+	var trebleCumulative = midCumulative + trebleAverage;
+
+	function drawCircle(innerRadius, outerRadius, color, cx, cy) {
+		var rx = outerRadius * width;
+		var ry = outerRadius * height;
 
 		// var cx = width / 2;
 		// var cy = height / 2;
 
-		for (var r = 0; r < rx; r += 1) {
-			for (var theta = 0; theta < 2 * Math.PI; theta += 0.01) {
-				plot(cx + r * Math.cos(theta), cy + (ry / rx) * r * Math.sin(theta), color);
+		for (var r = innerRadius; r < rx; r += 1) {
+			var big = true;
+			for (var theta = 0; theta < 2 * Math.PI; theta += 0.05) {
+				if (big) {
+					plot(cx + r * Math.cos(theta), cy + (ry / rx) * r * Math.sin(theta), color);
+				} else {
+					plot(cx + r / 1.5 * Math.cos(theta), cy + (ry / rx) * r / 1.5 * Math.sin(theta), color);
+				}
+				big = !big;
 			}
 		}
 	}
-
-	drawCircle(bassAverage, '#25aae1', width / 2, height / 2);
-	drawCircle(midAverage, '#678374', width / 2, height / 2);
-	drawCircle(trebleAverage, '#484303', width / 2, height / 2);
+	
+	drawCircle(0, trebleCumulative, 'red', width / 2, height / 2);
+	drawCircle(trebleCumulative, midCumulative, 'orange', width / 2, height / 2);
+	drawCircle(midCumulative, bassCumulative, 'yellow', width / 2, height / 2);
 
 	// for (var x = width / 2 - wvariation; x < width / 2 + wvariation; x++) {
 	// 	for (var y = height / 2 - hvariation; y < height / 2 + hvariation; y++) {
-	// 		plot(x, y, rgbaNorm(1 - bassAverage, midAverage, 1 - trebleAverage, 1));
+	// 		plot(x, y, rgbaNorm(1 - bassCumulative, midAverage, 1 - trebleAverage, 1));
 	// 	}
 	// }
-}
+});
 
 defineVisualizer('shakingPixelBars', 'Shows pixel bars but shakes them.', function(plot, frequencies, width, height, velocity, frameIndex) {
 	var bassAverage = frequencies.slice(0, 5).reduce(function(a, b) { return a + b }, 0) / 5;
