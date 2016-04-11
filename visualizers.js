@@ -133,7 +133,6 @@ defineVisualizer('shakingCenterBars', 'Centered bars shaking to the beat.', func
 	var maxVariationX = 0.08 * width;
 	var maxVariationY = 0.00 * height;
 	var rescaledFrequencies = rescaleFrequencies(frequencies, 60);
-	console.log(bassAverage);
 
 	var barWidth = width / rescaledFrequencies.length;
 	var actualBarWidth = barWidth / 4;
