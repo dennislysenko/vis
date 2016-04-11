@@ -11,7 +11,7 @@ For now, just add new visualizers to visualizers.js and pull requests will be we
 Keep an eye on https://github.com/dennislysenko/FFmpeg/tree/vis-filter for a ffmpeg port of selected filters. Check TODO as well.
 
 ## todo (please feel free to contribute here)
-- Ability to visualize any song, without having it be hardcoded. (potential inspiration: https://github.com/michaelbromley/soundcloud-visualizer.)
+- Ability to visualize any song, without having it be hardcoded. (potential inspiration: https://github.com/michaelbromley/soundcloud-visualizer)
 
 ## how does it work?
 I used FFmpeg to read in 10 seconds of a song with a relatively homogenous beat. Using FFmpeg's showfreqs filter, I generated FFT audio frequency data and put it into 20 empirically determined bins based on the frequencies visualizer from VLC. (Why? Individual bass frequencies are much more distinct than individual treble frequencies, so for example, bin #1 was frequency #1--lowest bass--while bin #20 was something like frequencies #173-256.) This sample data is hardcoded in bands.js. 
