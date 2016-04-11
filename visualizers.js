@@ -170,13 +170,30 @@ function smoothFrequencies(frequencies, length) {
 }
 
 defineVisualizer('mountainsAndValleys', 'Seashells from Sally.', function(plot, frequencies, width, height, velocity, frameIndex) {
-	var bassAverage = frequencies.slice(0, 5).reduce(function(a, b) { return a + b }, 0) / 5;
 	var smoothedFrequencies = smoothFrequencies(frequencies, width);
 
 	for (var x = 0; x < width; x++) {
-		var frequency = height / 2 + smoothedFrequencies[x] * height / 2;
-		var otherFrequency = height / 2 - smoothedFrequencies[width - x] * height / 2;
-		for (var y = otherFrequency; y < frequency; y++) {
+		var frequency = smoothedFrequencies[x];
+		var otherFrequency = smoothedFrequencies[width - x];
+
+		var frequencyY = height / 2 + frequency * height / 2;
+		var otherFrequencyY = height / 2 - otherFrequency * height / 2;
+		for (var y = otherFrequencyY; y < frequencyY; y++) {
+			plot(x, y, '#25aae1');
+		}
+	}
+});
+
+defineVisualizer('tatteredLineOfString', 'Diagonally symmetric plot of frequencies.', function(plot, frequencies, width, height, velocity, frameIndex) {
+	var smoothedFrequencies = smoothFrequencies(frequencies, width);
+
+	for (var x = 0; x < width; x++) {
+		var frequency = smoothedFrequencies[x];
+		var nextFrequency = smoothedFrequencies[x + 1] || frequency;
+
+		var frequencyY = height / 2 + frequency * height / 2;
+		var nextFrequencyY = height / 2 + nextFrequency * height / 2;
+		for (var y = Math.min(frequencyY, nextFrequencyY); y <= Math.max(frequencyY, nextFrequencyY); y++) {
 			plot(x, y, '#25aae1');
 		}
 	}
