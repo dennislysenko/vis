@@ -153,6 +153,35 @@ defineVisualizer('shakingCenterBars', 'Centered bars shaking to the beat.', func
 	}
 });
 
+function smoothFrequencies(frequencies, length) {
+	var resampleFactor = Math.floor(length / frequencies.length) - 1;
+	return frequencies.flatMap(function(frequency, index) {
+		var nextFrequency = frequencies[index + 1] || frequency;
+
+		var step = (nextFrequency - frequency) / resampleFactor;
+
+		var fudgedSamples = [frequency];
+		for (var i = 0; i < resampleFactor; i++) {
+			fudgedSamples.push(frequency + step * i);
+		}
+
+		return fudgedSamples;
+	});
+}
+
+defineVisualizer('mountainsAndValleys', 'Seashells from Sally.', function(plot, frequencies, width, height, velocity, frameIndex) {
+	var bassAverage = frequencies.slice(0, 5).reduce(function(a, b) { return a + b }, 0) / 5;
+	var smoothedFrequencies = smoothFrequencies(frequencies, width);
+
+	for (var x = 0; x < width; x++) {
+		var frequency = height / 2 + smoothedFrequencies[x] * height / 2;
+		var otherFrequency = height / 2 - smoothedFrequencies[width - x] * height / 2;
+		for (var y = otherFrequency; y < frequency; y++) {
+			plot(x, y, '#25aae1');
+		}
+	}
+});
+
 defineVisualizer('sun', 'Draws concentric circles representing approximate bass, mid and treble frequency ranges.', function (plot, frequencies, width, height, rgbaNorm) {
 	var bassAverage = frequencies.slice(0, 5).reduce(function(a, b) { return a + b }, 0) / 5;
 	var midAverage = frequencies.slice(5, 15).reduce(function(a, b) { return a + b }, 0) / 10;
