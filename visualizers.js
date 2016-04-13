@@ -277,3 +277,17 @@ defineVisualizer('shakingBars', 'Shows regular bars but shakes them in time with
 		}
 	}
 });
+
+defineVisualizer('movingBlob', 'Frequency-based blobs in the center that give the illusion of constant directional movement AND move with the beat.', function(plot, frequencies, width, height, velocity, frameIndex) {
+	var smoothedFrequencies = smoothFrequencies(frequencies, width);
+
+	for (var x = 0; x < width; x++) {
+		var frequency = Math.abs(smoothedFrequencies[x] * Math.sin(0.25 * frameIndex + x * (frequencies.length / smoothedFrequencies.length)));
+
+		var top = height / 2 + frequency * height / 2;
+		var bottom = height / 2 - frequency * height / 2;
+		for (var y = bottom; y < top; y++) {
+			plot(x, y, '#25aae1');
+		}
+	}
+});
